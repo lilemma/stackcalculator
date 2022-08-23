@@ -6,14 +6,14 @@ using UnityEngine;
 
 public class StackCalculator
 {
-    Stack<int> stack = new Stack<int>();
+    Stack<double> stack = new Stack<double>();
 
     int index;
     StringBuilder valueStringBuilder = new StringBuilder();
-    int tempIntA;
-    int tempIntB;
+    double tempValueA;
+    double tempValueB;
 
-    public Stack<int> Evaluate(string expression)
+    public Stack<double> Evaluate(string expression)
     {
         try
         {
@@ -24,9 +24,9 @@ public class StackCalculator
 
             while (index < expression.Length)
             {
-                if (int.TryParse(expression[index].ToString(), out tempIntA))
+                if (double.TryParse(expression[index].ToString(), out tempValueA))
                 {
-                    valueStringBuilder.Append(tempIntA);
+                    valueStringBuilder.Append(tempValueA);
                 }
                 else
                 {
@@ -49,9 +49,9 @@ public class StackCalculator
     {
         if (valueStringBuilder.Length > 0)
         {
-            if (int.TryParse(valueStringBuilder.ToString(), out tempIntA))
+            if (double.TryParse(valueStringBuilder.ToString(), out tempValueA))
             {
-                stack.Push(tempIntA);
+                stack.Push(tempValueA);
                 valueStringBuilder.Clear();
             }
             else
@@ -88,9 +88,9 @@ public class StackCalculator
 
     void EvaluateAdditionOperation()
     {
-        if (stack.TryPop(out tempIntA) && stack.TryPop(out tempIntB))
+        if (stack.TryPop(out tempValueA) && stack.TryPop(out tempValueB))
         {
-            stack.Push(tempIntA + tempIntB);
+            stack.Push(tempValueA + tempValueB);
         } else
         {
             throw new ArithmeticException("Failed to pop values from stack for addition operation");
@@ -99,9 +99,9 @@ public class StackCalculator
 
     void EvaluateSubtractionOperation()
     {
-        if (stack.TryPop(out tempIntA) && stack.TryPop(out tempIntB))
+        if (stack.TryPop(out tempValueA) && stack.TryPop(out tempValueB))
         {
-            stack.Push(tempIntA - tempIntB);
+            stack.Push(tempValueA - tempValueB);
         }
         else
         {
@@ -111,9 +111,9 @@ public class StackCalculator
 
     void EvaluateMultiplicationOperation()
     {
-        if (stack.TryPop(out tempIntA) && stack.TryPop(out tempIntB))
+        if (stack.TryPop(out tempValueA) && stack.TryPop(out tempValueB))
         {
-            stack.Push(tempIntA * tempIntB);
+            stack.Push(tempValueA * tempValueB);
         }
         else
         {
@@ -123,13 +123,13 @@ public class StackCalculator
 
     void EvaluateDivisionOperation()
     {
-        if (stack.TryPop(out tempIntA) && stack.TryPop(out tempIntB))
+        if (stack.TryPop(out tempValueA) && stack.TryPop(out tempValueB))
         {
-            if (tempIntB == 0)
+            if (tempValueB == 0)
             {
                 throw new DivideByZeroException("Cannot divide by zero");
             }
-            stack.Push(tempIntA / tempIntB);
+            stack.Push(tempValueA / tempValueB);
         }
         else
         {

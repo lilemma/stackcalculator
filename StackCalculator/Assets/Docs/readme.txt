@@ -13,3 +13,9 @@ https://duckduckgo.com/?t=ffab&q=calculator+app&iax=images&ia=images
 5. Tests Assembly location problem.
 Cannot use StackCalculator in Scene when Tests.asmdef is located in root
 Cannot use StackCalculator in Tests when Tests.asmdef is located in tests folder
+
+6. Int to Double implementation
+
+7. Deploy to device
+
+8. API Implementation
