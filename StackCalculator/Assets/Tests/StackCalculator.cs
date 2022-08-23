@@ -40,7 +40,6 @@ public class StackCalculator
         catch (Exception e)
         {
             Debug.LogException(e);
-            throw e;
         }
         return stack;
     }
@@ -91,7 +90,8 @@ public class StackCalculator
         if (stack.TryPop(out tempIntA) && stack.TryPop(out tempIntB))
         {
             stack.Push(tempIntA + tempIntB);
-        } else
+        }
+        else
         {
             throw new ArithmeticException("Failed to pop values from stack for addition operation");
         }
