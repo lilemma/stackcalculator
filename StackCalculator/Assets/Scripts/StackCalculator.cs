@@ -3,39 +3,81 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Events;
+using System.Linq;
 
 public class StackCalculator
 {
     Stack<double> stack = new Stack<double>();
 
     int index;
-    StringBuilder valueStringBuilder = new StringBuilder();
     double tempValueA;
     double tempValueB;
+    int calculationsUntilServiceCall = 10;
+
+    public void EvaluateWithChanceOfRandom(string expression, RandomService randomService, UnityAction<Stack<double>> onSuccess, UnityAction<string> onFailure)
+    {
+        try
+        {
+            calculationsUntilServiceCall--;
+
+            if (calculationsUntilServiceCall == 0)
+            {
+                calculationsUntilServiceCall = 10;
+                randomService.GetRandom(0, 100, 5, (response) =>
+                {
+                    OnGetRandom(response, onSuccess, onFailure);
+                });
+            }
+            else if (expression == null || expression.Trim().Length == 0)
+            {
+                onFailure.Invoke("Expression is empty");
+            }
+            else
+            {
+                onSuccess?.Invoke(Evaluate(expression.Replace(" ", "")));
+            }
+        }
+        catch (Exception ex)
+        {
+            onFailure?.Invoke(ex.Message);
+        }
+    }
+
+    private void OnGetRandom(ApiResponse<JsonArray<int>> response, UnityAction<Stack<double>> onSuccess, UnityAction<string> onFailure)
+    {
+        if (response is ApiSuccess<JsonArray<int>>)
+        {
+            var items = ((ApiSuccess<JsonArray<int>>)response).Result.items;
+            onSuccess?.Invoke(new Stack<double>(items.Select(x => (double)x).ToList()));
+        }
+        else if (response is ApiFailed<JsonArray<int>>)
+        {
+            var message = ((ApiFailed<JsonArray<int>>)response).Message;
+            Debug.Log($"Random Response Failed: {message}");
+            onFailure?.Invoke(message);
+        }
+    }
 
     public Stack<double> Evaluate(string expression)
     {
         try
         {
             stack.Clear();
-
             index = 0;
-            valueStringBuilder.Clear();
 
             while (index < expression.Length)
             {
                 if (double.TryParse(expression[index].ToString(), out tempValueA))
                 {
-                    valueStringBuilder.Append(tempValueA);
+                    stack.Push(tempValueA);
                 }
                 else
                 {
-                    ParseAndPushValue();
                     EvaluteOperator(expression[index]);
                 }
                 index++;
             }
-            ParseAndPushValue();
         }
         catch (Exception e)
         {
@@ -43,22 +85,6 @@ public class StackCalculator
             throw e;
         }
         return stack;
-    }
-
-    void ParseAndPushValue()
-    {
-        if (valueStringBuilder.Length > 0)
-        {
-            if (double.TryParse(valueStringBuilder.ToString(), out tempValueA))
-            {
-                stack.Push(tempValueA);
-                valueStringBuilder.Clear();
-            }
-            else
-            {
-                throw new FormatException($"Failed to parse '{valueStringBuilder}' as integer");
-            }
-        }
     }
 
     void EvaluteOperator(char operatorSymbol)
@@ -78,9 +104,6 @@ public class StackCalculator
             case 'x':
                 EvaluateMultiplicationOperation();
                 break;
-            case ' ':
-                ParseAndPushValue();
-                break;
             default:
                 throw new NotImplementedException($"Failed to evaluate operator '{operatorSymbol}'");
         }
@@ -91,7 +114,8 @@ public class StackCalculator
         if (stack.TryPop(out tempValueA) && stack.TryPop(out tempValueB))
         {
             stack.Push(tempValueA + tempValueB);
-        } else
+        }
+        else
         {
             throw new ArithmeticException("Failed to pop values from stack for addition operation");
         }

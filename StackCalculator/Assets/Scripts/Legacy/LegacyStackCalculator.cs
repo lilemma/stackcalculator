@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
 
-public class StackCalculatorV2
+public class LegacyStackCalculator
 {
     Stack<double> stack = new Stack<double>();
 
@@ -13,55 +12,37 @@ public class StackCalculatorV2
     StringBuilder valueStringBuilder = new StringBuilder();
     double tempValueA;
     double tempValueB;
-    int calculationsUntilServiceCall = 10;
-
-    public void EvaluateWithChanceOfRandom(string expression, RandomServiceV2 randomService, UnityAction<Stack<double>> callback)
-    {
-        calculationsUntilServiceCall--;
-        if (calculationsUntilServiceCall == 0)
-        {
-            calculationsUntilServiceCall = 10;
-            randomService.GetRandom(0, 100, 5, (result) =>
-            {
-
-            });
-        }
-        else
-        {
-            callback?.Invoke(Evaluate(expression));
-        }
-    }
 
     public Stack<double> Evaluate(string expression)
     {
-            try
+        try
+        {
+            stack.Clear();
+
+            index = 0;
+            valueStringBuilder.Clear();
+
+            while (index < expression.Length)
             {
-                stack.Clear();
-
-                index = 0;
-                valueStringBuilder.Clear();
-
-                while (index < expression.Length)
+                if (double.TryParse(expression[index].ToString(), out tempValueA))
                 {
-                    if (double.TryParse(expression[index].ToString(), out tempValueA))
-                    {
-                        valueStringBuilder.Append(tempValueA);
-                    }
-                    else
-                    {
-                        ParseAndPushValue();
-                        EvaluteOperator(expression[index]);
-                    }
-                    index++;
+                    valueStringBuilder.Append(tempValueA);
                 }
-                ParseAndPushValue();
+                else
+                {
+                    ParseAndPushValue();
+                    EvaluteOperator(expression[index]);
+                }
+                index++;
             }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                throw e;
-            }
-            return stack;
+            ParseAndPushValue();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            throw e;
+        }
+        return stack;
     }
 
     void ParseAndPushValue()

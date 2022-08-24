@@ -23,3 +23,9 @@ Cannot use StackCalculator in Tests when Tests.asmdef is located in tests folder
 9. JSON Array issues with unity
 https://answers.unity.com/questions/1503047/json-must-represent-an-object-type.html
 Solution modify response json data or use Newtonsoft JSON
+
+10. Rewrite Calculator and UI to support callbacks for evaluation
+
+-- FUTURE --
+
+x. Update Tests to use new StackCalculator

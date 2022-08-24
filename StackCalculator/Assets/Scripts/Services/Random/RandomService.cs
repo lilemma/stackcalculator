@@ -8,40 +8,25 @@ using UnityEngine.Networking;
 
 public class RandomService : MonoBehaviour
 {
-    const string API_URL = "https://csrng.net/csrng/csrng.php";
+    const string API_URL = "http://www.randomnumberapi.com/api/v1.0/random";
 
-    private void Start()
+    public void GetRandom(int min, int max, int count, UnityAction<ApiResponse<JsonArray<int>>> callback)
     {
-        GetRandom(0, 100, OnGetRandom);
+        StartCoroutine(ProcessGetRandom(min, max, count, callback));
     }
 
-    void OnGetRandom(ApiResponse<JsonArray<RandomModel>> response)
-    {
-        if (response is ApiSuccess<JsonArray<RandomModel>>)
-        {
-            Debug.Log("Success: " + ((ApiSuccess<JsonArray<RandomModel>>)response).Result.items[0]);
-        } 
-        else if (response is ApiFailed<JsonArray<RandomModel>>)
-        {
-            Debug.Log("Failed: " + ((ApiFailed<JsonArray<RandomModel>>)response).Message);
-        }
-    }
-
-    public void GetRandom(int min, int max, UnityAction<ApiResponse<JsonArray<RandomModel>>> callback)
-    {
-        StartCoroutine(ProcessGetRandom(min, max, callback));
-    }
-
-    private IEnumerator ProcessGetRandom(int min, int max, UnityAction<ApiResponse<JsonArray<RandomModel>>> callback)
+    private IEnumerator ProcessGetRandom(int min, int max, int count, UnityAction<ApiResponse<JsonArray<int>>> callback)
     {
         var uriBuilder = new UriBuilder(API_URL);
         var query = HttpUtility.ParseQueryString(uriBuilder.Query);
         query.Add("min", min.ToString());
         query.Add("max", max.ToString());
+        query.Add("count", count.ToString());
         uriBuilder.Query = query.ToString();
 
         using (UnityWebRequest request = UnityWebRequest.Get(uriBuilder.ToString()))
         {
+            Debug.Log($"Sending Web Request... {request.uri}");
             yield return request.SendWebRequest();
 
             switch (request.result)
@@ -49,66 +34,37 @@ public class RandomService : MonoBehaviour
                 case UnityWebRequest.Result.Success:
                     try
                     {
-                        var result = (JsonArray<RandomModel>)JsonUtility.FromJson<JsonArray<RandomModel>>("{\"items\":" + request.downloadHandler.text + "}");
+                        Debug.Log($"Web Request Response Body: {request.downloadHandler.text}");
+
+                        var result = JsonUtility.FromJson<JsonArray<int>>(request.downloadHandler.text.ToJsonArrayFormat());
                         if (result != null)
                         {
-                            callback?.Invoke(new ApiSuccess<JsonArray<RandomModel>>(result));
+                            callback?.Invoke(new ApiSuccess<JsonArray<int>>(result));
                         }
                         else
                         {
-                            throw new NullReferenceException("Failed to parse");
+                            throw new NullReferenceException("Failed to parse object from json");
                         }
                     }
                     catch (Exception e)
                     {
-                        callback?.Invoke(new ApiFailed<JsonArray<RandomModel>>($"JsonParseException '{uriBuilder}': {request.downloadHandler.text}, exception: {e}"));
+                        callback?.Invoke(new ApiFailed<JsonArray<int>>($"JsonParseException '{uriBuilder}': {request.downloadHandler.text}, exception: {e}"));
 
-                    }                    
+                    }
                     break;
                 case UnityWebRequest.Result.ConnectionError:
-                    callback?.Invoke(new ApiFailed<JsonArray<RandomModel>>($"ConnectionError '{uriBuilder}' {request.error}"));
+                    callback?.Invoke(new ApiFailed<JsonArray<int>>($"ConnectionError '{uriBuilder}' {request.error}"));
                     break;
                 case UnityWebRequest.Result.ProtocolError:
-                    callback?.Invoke(new ApiFailed<JsonArray<RandomModel>>($"ProtocolError '{uriBuilder}' {request.error}"));
-
+                    callback?.Invoke(new ApiFailed<JsonArray<int>>($"ProtocolError '{uriBuilder}' {request.error}"));
                     break;
                 case UnityWebRequest.Result.DataProcessingError:
-                    callback?.Invoke(new ApiFailed<JsonArray<RandomModel>>($"DataProcessingError '{uriBuilder}' {request.error}"));
+                    callback?.Invoke(new ApiFailed<JsonArray<int>>($"DataProcessingError '{uriBuilder}' {request.error}"));
                     break;
                 default:
-                    callback?.Invoke(new ApiFailed<JsonArray<RandomModel>>($"Unknown '{uriBuilder}' {request.error}"));
+                    callback?.Invoke(new ApiFailed<JsonArray<int>>($"Unknown '{uriBuilder}' {request.error}"));
                     break;
             }
         }
     }
-}
-
-public abstract class ApiResponse<T>
-{
-}
-
-public class ApiSuccess<T> : ApiResponse<T>
-{
-    public ApiSuccess(T result)
-    {
-        Result = result;
-    }
-
-    public T Result { get; private set; }
-}
-
-public class ApiFailed<T> : ApiResponse<T>
-{
-    public ApiFailed(string message)
-    {
-        Message = message;
-    }
-
-    public string Message { get; private set; }
-}
-
-[Serializable]
-public class JsonArray<T>
-{
-    public T[] items;
 }
