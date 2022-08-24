@@ -19,3 +19,7 @@ Cannot use StackCalculator in Tests when Tests.asmdef is located in tests folder
 7. Deploy to device
 
 8. API Implementation
+
+9. JSON Array issues with unity
+https://answers.unity.com/questions/1503047/json-must-represent-an-object-type.html
+Solution modify response json data or use Newtonsoft JSON
